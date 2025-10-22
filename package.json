@@ -45,12 +45,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/example/historisnap"
+    "url": "https://github.com/f1ss1on/historisnap"
   },
   "bugs": {
-    "url": "https://github.com/example/historisnap/issues"
+    "url": "https://github.com/f1ss1on/historisnap/issues"
   },
-  "homepage": "https://github.com/example/historisnap#readme",
+  "homepage": "https://github.com/f1ss1on/historisnap#readme",
   "directories": {
     "src": "src",
     "dist": "dist",
