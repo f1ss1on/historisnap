@@ -3,8 +3,8 @@
     <div class="container">
       <div class="header-content">
         <router-link to="/" class="header-logo">
-          <span class="logo-icon">🏛️</span>
-          <span class="logo-text">History Explorer</span>
+          <span class="logo-icon">📷</span>
+          <span class="logo-text">Historisnap</span>
         </router-link>
         
         <nav class="header-nav">

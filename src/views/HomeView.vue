@@ -2,9 +2,9 @@
   <div class="home-view">
     <div class="container">
       <div class="hero">
-        <h1 class="hero-title">🏛️ Random History Explorer</h1>
+        <h1 class="hero-title">📷 Historisnap</h1>
         <p class="hero-subtitle">
-          Explore historical events with multimedia content and intelligent diagnostics
+          Snap into history! Explore random historical events with multimedia content and intelligent diagnostics
         </p>
         <div class="hero-actions">
           <router-link to="/explorer" class="btn btn-primary btn-lg">
@@ -22,9 +22,9 @@
 
       <div class="features-grid">
         <div class="feature-card card">
-          <div class="feature-icon">🏛️</div>
-          <h3>Historical Timeline</h3>
-          <p>Browse events from 1900 to {{ currentYear }} with detailed information</p>
+          <div class="feature-icon">📸</div>
+          <h3>Snap Through Time</h3>
+          <p>Browse events from 1900 to {{ currentYear }} with instant access to historical moments</p>
         </div>
         <div class="feature-card card">
           <div class="feature-icon">🎭</div>

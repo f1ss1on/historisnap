@@ -1,6 +1,6 @@
-# 🏛️ Random History Explorer
+# 📷 Historisnap
 
-A modern Vue.js application that explores random historical events from any year, featuring multimedia content, interactive navigation, and comprehensive testing capabilities.
+Snap into history! A modern Vue.js application that explores random historical events from any year, featuring multimedia content, interactive navigation, and comprehensive testing capabilities.
 
 ![Vue.js](https://img.shields.io/badge/Vue.js-3.4-4FC08D?style=flat&logo=vue.js&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?style=flat&logo=vite&logoColor=white)
@@ -40,7 +40,7 @@ A modern Vue.js application that explores random historical events from any year
 ```bash
 # Clone the repository
 git clone <your-repo-url>
-cd random-history-app
+cd historisnap
 
 # Install dependencies
 npm install
@@ -67,7 +67,7 @@ npm run lint         # Lint code (when implemented)
 ## 🏗️ Project Structure
 
 ```
-random-history-app/
+historisnap/
 ├── public/                 # Static assets
 ├── src/
 │   ├── assets/            # Images, styles, fonts

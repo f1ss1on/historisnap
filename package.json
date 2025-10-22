@@ -1,7 +1,7 @@
 {
-  "name": "random-history-explorer-vue",
-  "version": "3.0.0",
-  "description": "Vue.js-based historical events explorer with multimedia content and comprehensive testing suite",
+  "name": "historisnap",
+  "version": "1.0.0",
+  "description": "📷 Snap into history - Explore random historical events with multimedia content built with Vue.js",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -30,26 +30,27 @@
     "sass": "^1.69.5"
   },
   "keywords": [
-    "vue",
+    "historisnap",
     "history",
+    "vue",
     "timeline",
     "multimedia",
     "wikipedia",
     "educational",
-    "testing",
-    "diagnostics",
-    "vite"
+    "historical-events",
+    "vite",
+    "snap"
   ],
-  "author": "History Explorer Team",
+  "author": "Historisnap Team",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/example/random-history-explorer"
+    "url": "https://github.com/example/historisnap"
   },
   "bugs": {
-    "url": "https://github.com/example/random-history-explorer/issues"
+    "url": "https://github.com/example/historisnap/issues"
   },
-  "homepage": "https://github.com/example/random-history-explorer#readme",
+  "homepage": "https://github.com/example/historisnap#readme",
   "directories": {
     "src": "src",
     "dist": "dist",
