@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random History Explorer - Development</title>
+    <link rel="stylesheet" href="../src/css/styles.css">
+</head>
+<body>
+    <div class="wrap" id="app">
+  <header>
+    <h1>Paginated History — Years 1900 → <span id="current-year-label"></span></h1>
+    <div class="controls">
+      <input class="search" id="search" placeholder="Search event text or year (press Enter)" />
+      <button class="btn" id="random-today">Random Day</button>
+      <button class="btn" id="fetch-year-event">Fetch API Event</button>
+      <button class="btn" id="goto-today">Go to Current Year</button>
+    </div>
+  </header>
+
+  <!-- Testing UI will be injected here by test-automation.js if loaded -->
+  <div id="testing-container"></div>
+
+  <div class="main">
+    <section class="content" aria-live="polite">
+      <div id="display">
+        <!-- YEAR -->
+        <div class="year-big" id="display-year">—</div>
+        
+        <!-- DATE -->
+        <div class="event-date" id="event-date" style="display: none;"></div>
+        
+        <!-- SOURCE -->
+        <div class="event-source" id="event-source" style="display: none;"></div>
+        
+        <!-- MULTIMEDIA -->
+        <div class="media-thumbnail" id="media-thumbnail" style="display: none;">
+          <img id="event-image" alt="Historical image" />
+          <div class="media-overlay">
+            <span>📸 Click to view</span>
+          </div>
+        </div>
+        
+        <!-- TITLE -->
+        <div class="event-name" id="event-name" style="display: none;"></div>
+        
+        <!-- DESCRIPTION -->
+        <div class="event-description" id="event-description" style="display: none;"></div>
+        
+        <!-- Fallback display for when no event is selected -->
+        <div class="small-meta" id="display-sub">Click a year to view an event</div>
+        <div class="event-text" id="display-event"></div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="pager" aria-label="Year pager">
+        <div style="display:flex;align-items:center;gap:8px;justify-content:space-between">
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn" id="prev-page" title="Previous page (←)">&larr;</button>
+            <button class="btn" id="next-page" title="Next page (→)">&rarr;</button>
+          </div>
+          <div class="muted" id="page-info">Page 1</div>
+        </div>
+
+        <div class="years-grid" id="years-grid" tabindex="0" aria-label="Years list">
+          <!-- JS-generated year buttons -->
+        </div>
+
+        <div class="footer">
+          <div class="muted" id="years-range">1900 — 1909</div>
+          <div class="muted" id="total-years">0 years</div>
+        </div>
+      </div>
+
+      <div class="editor" aria-label="Event editor">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="muted">Edit event for <strong id="editor-year">—</strong></div>
+          <div>
+            <button class="btn" id="save-event">Save</button>
+            <button class="btn" id="clear-event">Clear</button>
+          </div>
+        </div>
+        <textarea id="event-input" placeholder="Add or edit event text for the selected year..."></textarea>
+        <div style="display:flex;justify-content:space-between;margin-top:8px">
+          <div class="muted">Edits saved locally (localStorage)</div>
+          <div><button class="btn" id="export-json">Export JSON</button></div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+  <footer style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin-top:8px">
+    <div>Tip: Use arrow keys ← → to page, ↑ ↓ to change selection.</div>
+    <div>Made for quick browsing — edit events locally.</div>
+  </footer>
+</div>
+
+<!-- Media Modal -->
+<div id="media-modal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modal-title">Media</h3>
+      <span class="modal-close" id="modal-close">&times;</span>
+    </div>
+    <div class="modal-body">
+      <img id="modal-image" style="display: none;" alt="Historical media" />
+      <audio id="modal-audio" controls preload="metadata" style="display: none; width: 100%; max-width: 600px;">
+        Your browser does not support the audio element.
+      </audio>
+      <video id="modal-video" controls style="display: none;">
+        Your browser does not support the video element.
+      </video>
+      <p id="modal-description"></p>
+    </div>
+  </div>
+</div>
+<script src="../src/js/index.js"></script>
+<!-- Testing module - automatically inject testing UI -->
+<script src="test-automation.js"></script>
+</body>
+</html>
