@@ -59,4 +59,22 @@ const router = createRouter({
   routes
 })
 
+// Handle GitHub Pages redirect parameter
+router.beforeEach((to, from, next) => {
+  // Check if this is the initial navigation with a redirect parameter
+  if (to.path === '/' || to.path === '/explorer') {
+    const urlParams = new URLSearchParams(window.location.search)
+    const redirect = urlParams.get('redirect')
+    
+    if (redirect) {
+      // Clean up the URL and navigate to the intended route
+      window.history.replaceState({}, '', window.location.pathname)
+      next(redirect)
+      return
+    }
+  }
+  
+  next()
+})
+
 export default router
