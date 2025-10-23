@@ -39,8 +39,6 @@ const logoLink = computed(() => isDevelopment.value ? '/' : '/explorer')
 </script>
 
 <style lang="scss" scoped>
-@import "@/assets/styles/variables.scss";
-
 .app-header {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
   backdrop-filter: blur(10px);
