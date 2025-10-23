@@ -4,10 +4,12 @@ class WikipediaAPI {
   constructor() {
     this.baseURL = 'https://en.wikipedia.org/api/rest_v1'
     this.apiURL = 'https://en.wikipedia.org/w/api.php'
-    this.rateLimitDelay = 100 // ms between requests
+    this.rateLimitDelay = 50 // Reduced delay for better performance
     this.lastRequestTime = 0
-    this.maxRetries = 3
-    this.timeoutDuration = 10000 // 10 seconds
+    this.maxRetries = 2 // Reduced retries
+    this.timeoutDuration = 5000 // Reduced timeout to 5 seconds
+    this.memoryCache = new Map() // In-memory cache for ultra-fast access
+    this.cacheTimeout = 1800000 // 30 minutes cache timeout
   }
 
   async delay(ms) {
@@ -47,6 +49,9 @@ class WikipediaAPI {
         signal: controller.signal,
         headers: {
           'User-Agent': 'HistoryExplorer/3.0 (Vue.js)',
+          'Accept-Encoding': 'gzip, deflate, br', // Request compression
+          'Accept': 'application/json',
+          'Cache-Control': 'public, max-age=3600', // Enable caching
           ...options.headers
         }
       })
@@ -65,10 +70,26 @@ class WikipediaAPI {
       await this.rateLimit()
       
       const cacheKey = `random_${year}`
+      
+      // Check memory cache first (fastest)
+      const memoryCached = this.memoryCache.get(cacheKey)
+      if (memoryCached && Date.now() - memoryCached.timestamp < this.cacheTimeout) {
+        historyStore.recordApiCall({
+          type: 'memory_cache_hit',
+          year,
+          success: true,
+          cached: true
+        })
+        return memoryCached.data
+      }
+      
+      // Check store cache second
       const cached = historyStore.getCachedEvent(cacheKey)
       if (cached) {
+        // Also store in memory cache for next time
+        this.memoryCache.set(cacheKey, { data: cached, timestamp: Date.now() })
         historyStore.recordApiCall({
-          type: 'cache_hit',
+          type: 'store_cache_hit',
           year,
           success: true,
           cached: true
@@ -79,7 +100,7 @@ class WikipediaAPI {
       historyStore.setLoading(true)
       historyStore.clearError()
 
-      // Try multiple approaches to get events for the year
+      // Try multiple approaches to get real historical events
       const strategies = [
         () => this.fetchEventsFromOnThisDay(year),
         () => this.fetchEventsFromSearch(year),
@@ -91,7 +112,9 @@ class WikipediaAPI {
         try {
           const result = await strategy()
           if (result) {
+            // Cache in both store and memory
             historyStore.setCachedEvent(cacheKey, result)
+            this.memoryCache.set(cacheKey, { data: result, timestamp: Date.now() })
             historyStore.recordApiCall({
               type: 'api_success',
               year,
@@ -107,15 +130,12 @@ class WikipediaAPI {
         }
       }
 
-      // If all strategies fail, create a fallback event
-      const fallbackEvent = {
-        year,
-        title: `Historical Events of ${year}`,
-        description: `This year marked various significant historical developments and events that shaped the world. While specific details may require further research, ${year} was part of the ongoing flow of human history with its own unique contributions to our collective story.`,
-        source: 'Generated',
-        multimedia: null,
-        timestamp: Date.now()
-      }
+      // Create optimized fallback event with historical context
+      const fallbackEvent = this.createHistoricalFallback(year)
+
+      // Cache the fallback too
+      historyStore.setCachedEvent(cacheKey, fallbackEvent)
+      this.memoryCache.set(cacheKey, { data: fallbackEvent, timestamp: Date.now() })
 
       historyStore.recordApiCall({
         type: 'fallback_used',
@@ -164,18 +184,36 @@ class WikipediaAPI {
     }
     
     const event = yearEvents[Math.floor(Math.random() * yearEvents.length)]
-    return await this.enrichEventData(event, year)
+    // Pass the actual month and day from the API call
+    return await this.enrichEventData(event, year, randomMonth, randomDay)
+  }
+
+  async fetchEventsFromSpecificDate(targetYear, month, day) {
+    const url = `${this.baseURL}/feed/onthisday/events/${month}/${day}`
+    const response = await this.fetchWithTimeout(url)
+    
+    if (!response.ok) {
+      throw new Error(`On This Day API error: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    const allEvents = data.events || []
+    
+    if (allEvents.length === 0) {
+      throw new Error('No events found for this date')
+    }
+    
+    // Pick a random event from this date (any year) and use its actual year
+    const randomEvent = allEvents[Math.floor(Math.random() * allEvents.length)]
+    const actualYear = randomEvent.year || targetYear
+    
+    // Enrich the event data with the actual year from the event, not the target year
+    return await this.enrichEventData(randomEvent, actualYear, month, day)
   }
 
   async fetchEventsFromSearch(year) {
-    const searchTerms = [
-      `events ${year}`,
-      `history ${year}`,
-      `${year} timeline`,
-      `what happened ${year}`
-    ]
-    
-    const searchTerm = searchTerms[Math.floor(Math.random() * searchTerms.length)]
+    // Optimized search with minimal data transfer
+    const searchTerm = `${year} events`
     
     const params = new URLSearchParams({
       action: 'query',
@@ -183,7 +221,7 @@ class WikipediaAPI {
       srsearch: searchTerm,
       format: 'json',
       origin: '*',
-      srlimit: 10
+      srlimit: 10 // Back to 10 for better variety of results
     })
     
     const url = `${this.apiURL}?${params}`
@@ -245,8 +283,14 @@ class WikipediaAPI {
     const cleanTitle = this.cleanWikipediaPageTitle(title)
     const encodedTitle = encodeURIComponent(cleanTitle)
     
+    // Use more efficient API endpoint with minimal data
     const url = `${this.baseURL}/page/summary/${encodedTitle}`
-    const response = await this.fetchWithTimeout(url)
+    const response = await this.fetchWithTimeout(url, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'HistoryExplorer/3.0 (Vue.js)'
+      }
+    })
     
     if (!response.ok) {
       throw new Error(`Page summary error: ${response.status}`)
@@ -254,22 +298,128 @@ class WikipediaAPI {
     
     const data = await response.json()
     
+    // Generate a random date for display (Month Day format)
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December']
+    const randomMonth = Math.floor(Math.random() * 12) + 1
+    const randomDay = Math.floor(Math.random() * 28) + 1
+    const formattedDate = `${months[randomMonth - 1]} ${randomDay}`
+
+    // Return data in the original format
     return {
       year,
-      title: data.title || cleanTitle,
-      description: data.extract || `Information about ${cleanTitle} from ${year}.`,
+      date: formattedDate,
+      name: this.stripHtmlTags(data.title || cleanTitle),
+      text: this.truncateDescription(this.stripHtmlTags(data.extract || `Information about ${cleanTitle} from ${year}.`)),
+      description: this.truncateDescription(this.stripHtmlTags(data.extract || `Information about ${cleanTitle} from ${year}.`)),
       source: data.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodedTitle}`,
-      multimedia: await this.extractMultimedia(data),
+      media: data.thumbnail ? await this.extractMultimedia(data) : null,
+      multimedia: data.thumbnail ? await this.extractMultimedia(data) : null,
       timestamp: Date.now()
     }
   }
 
-  async enrichEventData(event, targetYear) {
+  truncateDescription(text) {
+    // Limit description length to improve performance
+    const maxLength = 300
+    if (text.length <= maxLength) return text
+    return text.substring(0, maxLength).trim() + '...'
+  }
+
+  stripHtmlTags(text) {
+    if (!text) return text
+    
+    // Remove HTML tags using regex
+    return text
+      .replace(/<[^>]*>/g, '') // Remove all HTML tags
+      .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+      .replace(/&amp;/g, '&')  // Replace HTML entities
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .trim()
+  }
+
+  createHistoricalFallback(year) {
+    // Create contextual fallback based on historical periods
+    const getHistoricalContext = (year) => {
+      if (year >= 1990) return "the modern digital age, marked by technological revolution and globalization"
+      if (year >= 1970) return "an era of social change, environmental awareness, and technological advancement"
+      if (year >= 1950) return "the post-war boom period with rapid economic growth and cultural transformation"
+      if (year >= 1920) return "a time of significant social, political, and technological change between two world wars"
+      if (year >= 1900) return "the early 20th century, an era of innovation, industrialization, and global transformation"
+      return "a significant period in human history with important developments and events"
+    }
+
+    // Generate a random date for display (Month Day format)
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December']
+    const randomMonth = Math.floor(Math.random() * 12) + 1
+    const randomDay = Math.floor(Math.random() * 28) + 1
+    const formattedDate = `${months[randomMonth - 1]} ${randomDay}`
+
+    return {
+      year,
+      date: formattedDate,
+      name: `${year}: A Year in History`,
+      text: `The year ${year} was part of ${getHistoricalContext(year)}. This period witnessed important political, social, and cultural developments that contributed to shaping our modern world.`,
+      description: `The year ${year} was part of ${getHistoricalContext(year)}. This period witnessed important political, social, and cultural developments that contributed to shaping our modern world.`,
+      source: `https://en.wikipedia.org/wiki/${year}`,
+      media: null,
+      multimedia: null,
+      timestamp: Date.now()
+    }
+  }
+
+  async enrichEventData(event, targetYear, month = null, day = null) {
+    // Format the date properly - prioritize passed month/day, then event data
+    let formattedDate = ''
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December']
+    
+    if (month && day) {
+      // Use the month and day from the API call (OnThisDay)
+      formattedDate = `${months[month - 1]} ${day}`
+    } else if (event.year && event.month && event.day) {
+      // Use event's own date if available
+      formattedDate = `${months[event.month - 1]} ${event.day}`
+    } else if (event.month && event.day) {
+      // Use month and day without year
+      formattedDate = `${months[event.month - 1]} ${event.day}`
+    } else {
+      // Fallback - generate a random date for the year
+      const randomMonth = Math.floor(Math.random() * 12) + 1
+      const randomDay = Math.floor(Math.random() * 28) + 1
+      formattedDate = `${months[randomMonth - 1]} ${randomDay}`
+    }
+
+    // Properly separate title and description
+    let eventName = 'Historical Event'
+    let eventDescription = `A significant historical event that occurred in ${targetYear}.`
+    
+    if (event.text) {
+      // For OnThisDay events, event.text is the full description
+      // Try to extract a title from the first sentence or use page title
+      const firstSentence = event.text.split('.')[0] + '.'
+      let rawTitle = event.pages?.[0]?.displaytitle || event.pages?.[0]?.title || firstSentence
+      
+      // Remove HTML tags from title
+      eventName = this.stripHtmlTags(rawTitle)
+      eventDescription = this.stripHtmlTags(event.text)
+    } else if (event.title) {
+      eventName = this.stripHtmlTags(event.title)
+      eventDescription = this.stripHtmlTags(event.description || event.extract || `Information about ${event.title} from ${targetYear}.`)
+    }
+
     return {
       year: targetYear,
-      title: event.text || `Event from ${targetYear}`,
-      description: event.text || `A historical event that occurred in ${targetYear}.`,
-      source: event.pages?.[0]?.content_urls?.desktop?.page || 'Wikipedia',
+      date: formattedDate,
+      name: eventName,
+      text: eventDescription,
+      description: eventDescription,
+      source: event.pages?.[0]?.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${targetYear}`,
+      media: event.pages?.[0] ? await this.extractMultimedia(event.pages[0]) : null,
       multimedia: event.pages?.[0] ? await this.extractMultimedia(event.pages[0]) : null,
       timestamp: Date.now()
     }
@@ -282,7 +432,8 @@ class WikipediaAPI {
       return null
     }
     
-    const imageUrl = pageData.originalimage?.source || pageData.thumbnail?.source
+    // Prefer thumbnail over original image for better performance
+    const imageUrl = pageData.thumbnail?.source || pageData.originalimage?.source
     if (!imageUrl) {
       return null
     }
@@ -293,35 +444,20 @@ class WikipediaAPI {
       return cached
     }
     
-    try {
-      // Validate that the URL is accessible and is actually an image
-      const response = await this.fetchWithTimeout(imageUrl, { method: 'HEAD' })
-      if (!response.ok) {
-        return null
-      }
-      
-      const contentType = response.headers.get('content-type')
-      if (!contentType?.startsWith('image/')) {
-        return null
-      }
-      
-      const multimediaData = {
-        type: 'image',
-        url: imageUrl,
-        width: pageData.originalimage?.width || pageData.thumbnail?.width,
-        height: pageData.originalimage?.height || pageData.thumbnail?.height,
-        description: pageData.description || 'Historical image',
-        validated: true,
-        timestamp: Date.now()
-      }
-      
-      historyStore.setCachedMultimedia(imageUrl, multimediaData)
-      return multimediaData
-      
-    } catch (error) {
-      console.warn('Failed to validate multimedia:', error)
-      return null
+    // Skip validation for better performance - trust Wikipedia URLs
+    // This eliminates the HEAD request that was causing delays
+    const multimediaData = {
+      type: 'image',
+      url: imageUrl,
+      width: pageData.thumbnail?.width || 300, // Use thumbnail dimensions for better performance
+      height: pageData.thumbnail?.height || 200,
+      description: pageData.description || 'Historical image',
+      validated: false, // Mark as unvalidated but trusted
+      timestamp: Date.now()
     }
+    
+    historyStore.setCachedMultimedia(imageUrl, multimediaData)
+    return multimediaData
   }
 
   // Get API performance metrics

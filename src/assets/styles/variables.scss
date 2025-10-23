@@ -1,11 +1,19 @@
-// Colors
-$primary-color: #4a90e2;
-$secondary-color: #28a745;
-$accent-color: #ffc107;
-$danger-color: #dc3545;
-$dark-color: #2c5aa0;
-$light-color: #f8f9fa;
-$muted-color: #6c757d;
+// Colors - Original Dark Theme
+$bg-primary: #0f1724;
+$bg-secondary: #0b1220;
+$accent-color: #6ee7b7;
+$text-primary: #e6eef8;
+$text-muted: #94a3b8;
+$glass-bg: rgba(255, 255, 255, 0.03);
+$border-color: rgba(255, 255, 255, 0.04);
+
+// Legacy color variables for compatibility
+$primary-color: #6ee7b7;
+$secondary-color: #10b981;
+$danger-color: #ef4444;
+$dark-color: #e6eef8;
+$light-color: #f8fafc;
+$muted-color: #94a3b8;
 
 // Spacing
 $spacing-xs: 0.25rem;

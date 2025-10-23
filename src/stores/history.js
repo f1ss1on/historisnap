@@ -21,11 +21,20 @@ export const useHistoryStore = defineStore('history', () => {
   const yearsPerPage = ref(10)
   const startYear = ref(1900)
   
-  // Computed
+  // Computed with performance optimizations
   const years = computed(() => {
     const start = startYear.value + (currentPage.value - 1) * yearsPerPage.value
     const end = Math.min(start + yearsPerPage.value - 1, currentYear.value)
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i)
+    const length = end - start + 1
+    
+    // More efficient array creation
+    if (length <= 0) return []
+    
+    const result = new Array(length)
+    for (let i = 0; i < length; i++) {
+      result[i] = start + i
+    }
+    return result
   })
   
   const totalPages = computed(() => {
@@ -33,14 +42,18 @@ export const useHistoryStore = defineStore('history', () => {
   })
   
   const filteredEvents = computed(() => {
-    if (!searchQuery.value) return events.value
+    const query = searchQuery.value
+    if (!query || query.length < 2) return events.value
     
+    const queryLower = query.toLowerCase()
     const filtered = new Map()
+    
+    // More efficient iteration
     for (const [year, event] of events.value) {
       if (
-        year.toString().includes(searchQuery.value) ||
-        event.text?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        event.title?.toLowerCase().includes(searchQuery.value.toLowerCase())
+        year.toString().includes(query) ||
+        (event.text && event.text.toLowerCase().includes(queryLower)) ||
+        (event.title && event.title.toLowerCase().includes(queryLower))
       ) {
         filtered.set(year, event)
       }

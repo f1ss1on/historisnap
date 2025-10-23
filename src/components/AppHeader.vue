@@ -36,74 +36,92 @@ const isDevelopment = computed(() => import.meta.env.DEV)
 </script>
 
 <style lang="scss" scoped>
+@import "@/assets/styles/variables.scss";
+
 .app-header {
-  background: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   position: sticky;
   top: 0;
   z-index: 100;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
 }
 
 .header-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: $spacing-md 0;
+  padding: 16px 0;
 }
 
 .header-logo {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: $dark-color;
+  gap: 12px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #e6eef8;
   text-decoration: none;
-  transition: $transition-base;
+  transition: all 0.2s ease;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 
   &:hover {
-    color: $primary-color;
+    color: #6ee7b7;
     transform: translateY(-1px);
+    text-shadow: 0 0 8px rgba(110, 231, 183, 0.5);
   }
 
   .logo-icon {
-    font-size: 1.5rem;
+    font-size: 2rem;
   }
 }
 
 .header-nav {
   display: flex;
-  gap: $spacing-lg;
+  gap: 8px;
 }
 
 .nav-link {
-  padding: $spacing-xs $spacing-md;
-  color: $muted-color;
-  font-weight: 500;
+  padding: 8px 16px;
+  color: #94a3b8;
+  font-weight: 600;
   text-decoration: none;
-  border-radius: $border-radius;
-  transition: $transition-base;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 
-  &:hover,
-  &.active {
-    color: $primary-color;
-    background: rgba($primary-color, 0.1);
+  &:hover {
+    color: #6ee7b7;
+    background: rgba(110, 231, 183, 0.1);
+    border-color: #6ee7b7;
+    transform: translateY(-1px);
   }
 
   &.active {
-    font-weight: 600;
+    color: #0f1724;
+    background: linear-gradient(180deg, #6ee7b7, #10b981);
+    border-color: #6ee7b7;
+    font-weight: bold;
+    box-shadow: 0 4px 16px rgba(110, 231, 183, 0.3);
   }
 }
 
-@media (max-width: $breakpoint-sm) {
+@media (max-width: 768px) {
   .header-content {
     flex-direction: column;
-    gap: $spacing-md;
+    gap: 16px;
   }
   
   .header-nav {
-    gap: $spacing-md;
+    gap: 12px;
   }
 }
 </style>

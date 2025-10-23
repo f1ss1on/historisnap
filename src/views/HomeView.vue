@@ -54,46 +54,104 @@ const currentYear = new Date().getFullYear()
 </script>
 
 <style lang="scss" scoped>
+@import "@/assets/styles/variables.scss";
+
 .home-view {
   min-height: 100vh;
   display: flex;
   align-items: center;
-  padding: $spacing-xl 0;
+  padding: 48px 0;
+  background: radial-gradient(
+      1000px 400px at 10% 10%,
+      rgba(110, 231, 183, 0.06),
+      transparent 10%
+    ),
+    linear-gradient(180deg, rgba(7, 11, 18, 1) 0%, rgba(12, 18, 28, 1) 100%);
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
 }
 
 .hero {
   text-align: center;
-  margin-bottom: $spacing-xl;
-  color: white;
+  margin-bottom: 48px;
+  color: #e6eef8;
 
   &-title {
-    font-size: 3.5rem;
-    margin-bottom: $spacing-lg;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    font-size: 4rem;
+    margin-bottom: 24px;
+    font-weight: bold;
+    text-shadow: 0 0 32px rgba(110, 231, 183, 0.3);
+    color: #6ee7b7;
+    letter-spacing: -2px;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 
-    @media (max-width: $breakpoint-md) {
+    @media (max-width: 768px) {
       font-size: 2.5rem;
     }
   }
 
   &-subtitle {
     font-size: 1.25rem;
-    margin-bottom: $spacing-xl;
-    opacity: 0.9;
+    margin-bottom: 48px;
+    color: #94a3b8;
     max-width: 600px;
     margin-left: auto;
     margin-right: auto;
+    line-height: 1.6;
   }
 
   &-actions {
     display: flex;
-    gap: $spacing-md;
+    gap: 16px;
     justify-content: center;
     flex-wrap: wrap;
 
-    .btn-lg {
-      padding: $spacing-md $spacing-xl;
+    .btn {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      color: #6ee7b7;
+      padding: 16px 32px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
       font-size: 1.125rem;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+
+      &:hover {
+        background: rgba(110, 231, 183, 0.1);
+        border-color: #6ee7b7;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(110, 231, 183, 0.2);
+      }
+      
+      &.btn-primary {
+        background: linear-gradient(180deg, #6ee7b7, #10b981);
+        color: #0f1724;
+        border-color: #6ee7b7;
+        font-weight: bold;
+        
+        &:hover {
+          background: linear-gradient(180deg, #ffffff, #6ee7b7);
+          box-shadow: 0 8px 32px rgba(110, 231, 183, 0.4);
+        }
+      }
+      
+      &.btn-outline {
+        background: transparent;
+        border: 2px solid #6ee7b7;
+        
+        &:hover {
+          background: #6ee7b7;
+          color: #0f1724;
+        }
+      }
     }
   }
 }
@@ -101,28 +159,43 @@ const currentYear = new Date().getFullYear()
 .features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: $spacing-lg;
-  margin-top: $spacing-xl;
+  gap: 24px;
+  margin-top: 48px;
 }
 
 .feature-card {
   text-align: center;
-  padding: $spacing-xl;
+  padding: 32px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: #6ee7b7;
+    box-shadow: 0 12px 48px rgba(110, 231, 183, 0.1);
+  }
 
   .feature-icon {
     font-size: 3rem;
-    margin-bottom: $spacing-lg;
+    margin-bottom: 24px;
     display: block;
+    opacity: 0.8;
   }
 
   h3 {
-    color: $dark-color;
-    margin-bottom: $spacing-md;
+    color: #e6eef8;
+    margin-bottom: 16px;
+    font-size: 1.25rem;
+    font-weight: 600;
   }
 
   p {
-    color: $muted-color;
+    color: #94a3b8;
     margin-bottom: 0;
+    line-height: 1.6;
   }
 }
 </style>
