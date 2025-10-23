@@ -41,8 +41,9 @@
     "vite",
     "snap"
   ],
-  "author": "Historisnap Team",
+  "author": "Riad Kilani (f1ss1on)",
   "license": "MIT",
+  "copyright": "Copyright (c) 2025 Riad Kilani (f1ss1on)",
   "repository": {
     "type": "git",
     "url": "https://github.com/f1ss1on/historisnap"
