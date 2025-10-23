@@ -1166,6 +1166,8 @@ onMounted(async () => {
   padding: 24px 24px 32px 24px;
   display: grid;
   gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .instructions-section {
@@ -1326,25 +1328,120 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
+  .history-explorer {
+    overflow-x: hidden;
+  }
+
+  .container {
+    padding: 16px 12px 24px 12px;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+
   .instructions-card {
-    padding: 24px 20px;
+    padding: 20px 16px;
   }
 
   .instructions-title {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
 
   .instructions-text {
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 
   .instructions-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 12px;
   }
 
   .instruction-item {
-    padding: 16px;
+    padding: 12px;
+  }
+
+  .search-controls {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    
+    .search-input-group {
+      min-width: unset;
+      width: 100%;
+      flex-direction: column;
+      gap: 8px;
+      
+      .search-input {
+        min-width: unset;
+        width: 100%;
+        font-size: 0.9rem;
+      }
+      
+      .search-btn {
+        width: 100%;
+        min-width: unset;
+      }
+    }
+    
+    .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .disclaimer-content {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+
+  .calendar-picker-container {
+    width: 100%;
+    
+    .calendar-picker {
+      min-width: unset !important;
+      width: calc(100vw - 40px);
+      max-width: 350px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px;
+      
+      .calendar-section {
+        width: 100%;
+      }
+      
+      .decade-grid, .year-grid, .month-grid {
+        grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)) !important;
+        gap: 6px !important;
+      }
+      
+      .decade-btn, .year-btn, .month-btn, .day-btn {
+        padding: 8px 4px !important;
+        font-size: 0.8rem !important;
+        min-width: unset !important;
+      }
+    }
+  }
+
+  .quick-actions {
+    flex-direction: column;
+    gap: 8px;
+    
+    .btn {
+      width: 100%;
+      font-size: 0.85rem;
+      padding: 10px 12px;
+    }
+  }
+
+  .timeline-section {
+    .decade-navigation {
+      gap: 8px;
+      
+      .decade-display {
+        font-size: 1rem;
+        min-width: unset;
+      }
+    }
   }
 }
 
@@ -1401,11 +1498,13 @@ onMounted(async () => {
     gap: 8px;
     flex: 1;
     min-width: 300px;
+    width: 100%;
   }
   
   .search-input {
     flex: 1;
-    min-width: 250px;
+    min-width: 200px;
+    width: 100%;
     padding: 12px 16px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
     border: 1px solid rgba(255, 255, 255, 0.04);

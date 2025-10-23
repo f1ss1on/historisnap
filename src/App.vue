@@ -42,5 +42,19 @@ html, body {
     ),
     linear-gradient(180deg, rgba(7, 11, 18, 1) 0%, rgba(12, 18, 28, 1) 100%);
   color: #e6eef8;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
+  #app {
+    width: 100%;
+    max-width: 100vw;
+  }
 }
 </style>
