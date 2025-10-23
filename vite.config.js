@@ -5,8 +5,8 @@ import { resolve } from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
-  // Use relative paths for deployment flexibility
-  base: './',
+  // GitHub Pages deployment configuration
+  base: process.env.NODE_ENV === 'production' ? '/historisnap/' : './',
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
