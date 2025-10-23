@@ -4,20 +4,26 @@ import HistoryExplorer from '@views/HistoryExplorer.vue'
 
 // Conditionally import TestingView only in development for build optimization
 
-const routes = [
-  {
+// Create routes based on environment
+const routes = []
+
+// In production, redirect root directly to explorer
+if (!import.meta.env.DEV) {
+  routes.push({
+    path: '/',
+    redirect: '/explorer'
+  })
+} else {
+  // In development, show home page
+  routes.push({
     path: '/',
     name: 'Home',
-    component: HomeView,
-    // In production, redirect root to explorer
-    beforeEnter: (to, from, next) => {
-      if (!import.meta.env.DEV && to.path === '/') {
-        next('/explorer')
-      } else {
-        next()
-      }
-    }
-  },
+    component: HomeView
+  })
+}
+
+// Add explorer routes
+routes.push(
   {
     path: '/explorer',
     name: 'HistoryExplorer',
@@ -29,7 +35,7 @@ const routes = [
     component: HistoryExplorer,
     props: true
   }
-]
+)
 
 // Only add testing route in development
 if (import.meta.env.DEV) {
@@ -49,7 +55,7 @@ if (import.meta.env.DEV) {
 }
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.PROD ? '/historisnap/' : '/'),
   routes
 })
 
