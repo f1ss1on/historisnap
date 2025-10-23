@@ -2,7 +2,7 @@
   <header class="app-header">
     <div class="container">
       <div class="header-content">
-        <router-link to="/" class="header-logo">
+        <router-link :to="logoLink" class="header-logo">
           <span class="logo-icon">📷</span>
           <span class="logo-text">Historisnap</span>
         </router-link>
@@ -33,6 +33,9 @@
 import { computed } from 'vue'
 
 const isDevelopment = computed(() => import.meta.env.DEV)
+
+// In production, logo links to explorer; in development, to home
+const logoLink = computed(() => isDevelopment.value ? '/' : '/explorer')
 </script>
 
 <style lang="scss" scoped>

@@ -1,17 +1,96 @@
 <template>
   <div class="history-explorer">
     <div class="container">
+      <!-- Collapsible User Instructions -->
+      <div class="instructions-section">
+        <div class="instructions-toggle">
+          <button @click="toggleInstructions" class="help-toggle-btn">
+            <span class="toggle-icon" :class="{ 'open': showInstructions }">ℹ️</span>
+            <span class="toggle-text">{{ showInstructions ? 'Hide Help' : 'How to Use' }}</span>
+            <span class="toggle-arrow" :class="{ 'open': showInstructions }">▼</span>
+          </button>
+        </div>
+        
+        <div v-show="showInstructions" class="instructions-card">
+          <h2 class="instructions-title">📷 Explore History</h2>
+          <p class="instructions-text">
+            Discover fascinating historical events and moments through time. Use the comprehensive tools below to navigate through history:
+          </p>
+          <div class="instructions-grid">
+            <div class="instruction-item">
+              <span class="instruction-icon">🔍</span>
+              <div class="instruction-content">
+                <strong>Search Events</strong>
+                <p>Search by keywords (e.g., "World War"), event names (e.g., "Pearl Harbor"), or specific dates (e.g., "September 11", "7/4/1776", "1969"). Press Enter to search or click the Search button.</p>
+              </div>
+            </div>
+            <div class="instruction-item">
+              <span class="instruction-icon">🎲</span>
+              <div class="instruction-content">
+                <strong>Random Event</strong>
+                <p>Click to discover a surprise historical event from any random year. Perfect for serendipitous historical exploration and learning something unexpected.</p>
+              </div>
+            </div>
+            <div class="instruction-item">
+              <span class="instruction-icon">📅</span>
+              <div class="instruction-content">
+                <strong>Select Date</strong>
+                <p>Use the calendar picker to explore events from specific historical dates. Choose century, decade, year, month, and day. Click "Go to Date" to see what happened on that exact day in history.</p>
+              </div>
+            </div>
+            <div class="instruction-item">
+              <span class="instruction-icon">🗓️</span>
+              <div class="instruction-content">
+                <strong>Timeline Navigator</strong>
+                <p>Browse decades using arrow buttons (← →), then select any year from the grid. Each decade shows 10 years. Click any year to see events from that time period.</p>
+              </div>
+            </div>
+            <div class="instruction-item">
+              <span class="instruction-icon">⚡</span>
+              <div class="instruction-content">
+                <strong>Quick Actions</strong>
+                <p><strong>Current Year:</strong> Jump to current year events<br><strong>Random Decade:</strong> Explore a random time period<br><strong>Major Events:</strong> Discover pivotal moments like 9/11, Moon Landing, JFK assassination, and other world-changing events</p>
+              </div>
+            </div>
+            <div class="instruction-item">
+              <span class="instruction-icon">🎬</span>
+              <div class="instruction-content">
+                <strong>Media & Details</strong>
+                <p>Events may include images, audio, or video content. Click media thumbnails to view full-size. Use "🔄 New Event" to get a different event for the same year.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Source Disclaimer -->
+      <div class="disclaimer-section">
+        <div class="disclaimer-card">
+          <div class="disclaimer-content">
+            <span class="disclaimer-icon">⚠️</span>
+            <div class="disclaimer-text">
+              <strong>Data Source Notice:</strong> Historical information is sourced from Wikipedia and may contain inaccuracies, incorrect dates, or incomplete details. Please verify important information through additional historical sources.
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Search and Controls -->
       <div class="controls-section">
         <div class="search-controls">
-          <input 
-            v-model="searchQuery"
-            type="text" 
-            class="search-input"
-            placeholder="Search events or years..."
-            :disabled="isLoading"
-            @keyup.enter="handleSearch"
-          />
+          <div class="search-input-group">
+            <input 
+              v-model="searchInputValue"
+              type="text" 
+              class="search-input"
+              placeholder="Search events, keywords, or dates (e.g., 'September 11', 'World War', '1969', '7/4/1776')..."
+              :disabled="isLoading"
+              @keyup.enter="handleSearch"
+            />
+            <button @click="handleSearch" class="btn btn-primary search-btn" :disabled="isLoading || !searchInputValue?.trim()">
+              🔍 Search
+            </button>
+          </div>
           <button @click="getRandomEvent" class="btn btn-secondary">
             🎲 Random Event
           </button>
@@ -274,6 +353,12 @@ const showMediaModal = ref(false)
 // Performance optimization: Use shallowRef for frequently changing data
 const searchTimeout = shallowRef(null)
 
+// Instructions state
+const showInstructions = ref(false)
+
+// Search input ref for direct access
+const searchInputValue = ref('')
+
 // Decade navigation state
 const currentDecadePage = ref(0)
 const selectedDecade = ref(Math.floor(new Date().getFullYear() / 10) * 10) // Default to current decade
@@ -307,6 +392,7 @@ const selectedYear = computed(() => historyStore.selectedYear)
 const isLoading = computed(() => historyStore.isLoading)
 const currentPage = computed(() => historyStore.currentPage)
 const totalPages = computed(() => historyStore.totalPages)
+const isDevelopment = computed(() => import.meta.env.DEV)
 
 // Cached values for better performance
 const currentYear = new Date().getFullYear()
@@ -340,21 +426,25 @@ const totalYears = currentYear - 1900 + 1 // Static calculation
 const allDecades = computed(() => {
   const decades = []
   
-  // Add BC decades (going backwards from 1 BC to 3000 BC)
-  // Note: BC years are represented as negative numbers
-  for (let decade = -1; decade >= -3000; decade -= 10) {
-    decades.push(decade)
+  // Add historical AD decades only (avoid confusing BC years)
+  // Start from year 1 and go to current year in 10-year increments
+  for (let decade = 1; decade <= currentYear; decade += 10) {
+    // Round down to nearest decade boundary
+    const decadeStart = Math.floor(decade / 10) * 10
+    if (decadeStart >= 1 && !decades.includes(decadeStart)) {
+      decades.push(decadeStart)
+    }
   }
   
-  // Add AD decades starting from 1 AD
-  decades.push(1)
+  // Ensure we have some key historical decades
+  const keyDecades = [1, 10, 100, 500, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000]
+  keyDecades.forEach(decade => {
+    if (decade <= currentYear && !decades.includes(decade)) {
+      decades.push(decade)
+    }
+  })
   
-  // Then add proper decade boundaries: 10, 20, 30, ..., 1900, 1910, 1920, etc.
-  for (let decade = 10; decade <= currentYear; decade += 10) {
-    decades.push(decade)
-  }
-  
-  return decades
+  return decades.sort((a, b) => a - b)
 })
 
 const visibleDecades = computed(() => {
@@ -582,9 +672,10 @@ const fetchEventForTodaysDate = async (requestedYear, month, day) => {
 }
 
 const goToRandomDecade = async () => {
-  // Pick a random decade from available decades
-  const randomDecadeIndex = Math.floor(Math.random() * allDecades.value.length)
-  const randomDecade = allDecades.value[randomDecadeIndex]
+  // Pick a random decade from available decades (excluding very early ones)
+  const recentDecades = allDecades.value.filter(decade => decade >= 1000)
+  const randomDecadeIndex = Math.floor(Math.random() * recentDecades.length)
+  const randomDecade = recentDecades[randomDecadeIndex]
   
   // Update navigation to show the selected decade
   selectedDecade.value = randomDecade
@@ -593,9 +684,10 @@ const goToRandomDecade = async () => {
     currentDecadePage.value = Math.floor(decadeIndex / 3)
   }
   
-  // Pick a random year from that decade
-  const yearInDecade = randomDecade + Math.floor(Math.random() * 10)
-  const clampedYear = Math.min(yearInDecade, currentYear)
+  // Pick a random year from that decade, ensuring it's valid
+  const yearOffset = Math.floor(Math.random() * 10)
+  const targetYear = randomDecade + yearOffset
+  const clampedYear = Math.min(Math.max(targetYear, 1), currentYear)
   
   historyStore.setSelectedYear(clampedYear)
   await fetchEventForYear(clampedYear)
@@ -659,7 +751,7 @@ const goToHistoricalPeriod = async () => {
       
       // Show media modal if available
       if (event.media?.length > 0) {
-        await handleViewMedia(event)
+        openMediaModal()
       }
     } else {
       console.log('❌ No Wikipedia data, creating custom event')
@@ -716,9 +808,62 @@ const goToHistoricalPeriod = async () => {
   }
 }
 
-const handleSearch = () => {
-  // Implementation for search functionality
-  console.log('Searching for:', searchQuery.value)
+const handleSearch = async () => {
+  // Use the direct input value
+  const query = searchInputValue.value?.trim()
+  
+  if (!query || query.length < 2) {
+    console.log('❌ Search query too short or empty')
+    return
+  }
+
+  // Update the store with the search query
+  historyStore.searchQuery = query
+
+  console.log('🔍 Searching for:', query)
+  
+  try {
+    historyStore.setLoading(true)
+    historyStore.clearError()
+    
+    // Use the new comprehensive search method
+    const event = await wikipediaAPI.searchEvents(query)
+    
+    if (event) {
+      // Use the year from the event or extract from context
+      const eventYear = event.year || new Date().getFullYear()
+      
+      console.log('✅ Search result found:', event.name || event.title, 'Year:', eventYear)
+      
+      // Update store and navigation
+      historyStore.setSelectedYear(eventYear)
+      historyStore.setEvent(eventYear, event)
+      
+      // Display the event
+      currentEvent.value = event
+      updateUrlWithEventTitle(event)
+      
+      // Update decade navigation
+      const yearDecade = Math.floor(eventYear / 10) * 10
+      selectedDecade.value = yearDecade
+      syncDecadePage()
+      
+      // Show media modal if available
+      if (event.media?.length > 0 || event.multimedia) {
+        openMediaModal()
+      }
+      
+      console.log('🎉 Search completed successfully')
+    } else {
+      console.log('❌ No search results found')
+      historyStore.setError(`No results found for "${query}"`)
+    }
+  } catch (error) {
+    console.error('💥 Search error:', error)
+    historyStore.setError(`Search failed: ${error.message}`)
+  } finally {
+    historyStore.setLoading(false)
+  }
 }
 
 // URL Management Functions
@@ -941,6 +1086,10 @@ const applySelectedDate = async () => {
   }
 }
 
+const toggleInstructions = () => {
+  showInstructions.value = !showInstructions.value
+}
+
 const formatTimestamp = (timestamp) => {
   return new Date(timestamp).toLocaleString()
 }
@@ -951,6 +1100,13 @@ watch(currentEvent, (newEvent) => {
     updateUrlWithEventTitle(newEvent)
   }
 }, { immediate: false })
+
+// Sync search input with store
+watch(() => historyStore.searchQuery, (newQuery) => {
+  if (newQuery !== searchInputValue.value) {
+    searchInputValue.value = newQuery || ''
+  }
+}, { immediate: true })
 
 onMounted(async () => {
   // Check if we have a title parameter in the route
@@ -1007,9 +1163,226 @@ onMounted(async () => {
 .container {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 32px 24px;
+  padding: 24px 24px 32px 24px;
   display: grid;
   gap: 20px;
+}
+
+.instructions-section {
+  margin-bottom: 20px;
+}
+
+.instructions-toggle {
+  text-align: center;
+  margin-bottom: 16px;
+  
+  .help-toggle-btn {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(110, 231, 183, 0.2);
+    color: #6ee7b7;
+    padding: 12px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    backdrop-filter: blur(10px);
+    font-size: 0.9rem;
+    
+    &:hover {
+      background: linear-gradient(180deg, rgba(110, 231, 183, 0.1), rgba(110, 231, 183, 0.05));
+      border-color: rgba(110, 231, 183, 0.4);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(110, 231, 183, 0.2);
+    }
+    
+    .toggle-icon {
+      font-size: 1.1rem;
+      transition: transform 0.3s ease;
+      
+      &.open {
+        transform: scale(1.1);
+      }
+    }
+    
+    .toggle-text {
+      font-size: 0.9rem;
+    }
+    
+    .toggle-arrow {
+      font-size: 0.8rem;
+      transition: transform 0.3s ease;
+      
+      &.open {
+        transform: rotate(180deg);
+      }
+    }
+  }
+}
+
+.instructions-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 32px;
+  backdrop-filter: blur(10px);
+  text-align: center;
+  animation: slideDown 0.3s ease-out;
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+.instructions-title {
+  color: #6ee7b7;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 16px;
+  text-shadow: 0 0 16px rgba(110, 231, 183, 0.3);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+.instructions-text {
+  color: #94a3b8;
+  font-size: 1.125rem;
+  margin-bottom: 32px;
+  line-height: 1.6;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.instructions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.instruction-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  text-align: left;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: rgba(110, 231, 183, 0.2);
+    background: linear-gradient(180deg, rgba(110, 231, 183, 0.05), transparent);
+  }
+}
+
+.instruction-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.instruction-content {
+  flex: 1;
+
+  strong {
+    color: #e6eef8;
+    font-size: 1rem;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  p {
+    color: #94a3b8;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin: 0;
+    
+    strong {
+      color: #6ee7b7;
+      font-size: 0.875rem;
+      font-weight: 600;
+      display: inline;
+      margin: 0;
+    }
+    
+    br {
+      margin: 4px 0;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .instructions-card {
+    padding: 24px 20px;
+  }
+
+  .instructions-title {
+    font-size: 1.75rem;
+  }
+
+  .instructions-text {
+    font-size: 1rem;
+  }
+
+  .instructions-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .instruction-item {
+    padding: 16px;
+  }
+}
+
+.disclaimer-section {
+  margin-bottom: 16px;
+}
+
+.disclaimer-card {
+  background: linear-gradient(180deg, rgba(234, 179, 8, 0.08), rgba(234, 179, 8, 0.03));
+  border: 1px solid rgba(234, 179, 8, 0.15);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.disclaimer-content {
+  padding: 12px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.disclaimer-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.disclaimer-text {
+  color: #fbbf24;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  
+  strong {
+    color: #fcd34d;
+    font-weight: 600;
+  }
 }
 
 .controls-section {
@@ -1022,9 +1395,17 @@ onMounted(async () => {
   align-items: center;
   flex-wrap: wrap;
   
-  .search-input {
+  .search-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     flex: 1;
     min-width: 300px;
+  }
+  
+  .search-input {
+    flex: 1;
+    min-width: 250px;
     padding: 12px 16px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent);
     border: 1px solid rgba(255, 255, 255, 0.04);
@@ -1041,6 +1422,27 @@ onMounted(async () => {
       outline: none;
       border-color: #6ee7b7;
       background: rgba(255, 255, 255, 0.05);
+    }
+  }
+  
+  .search-btn {
+    padding: 12px 18px;
+    white-space: nowrap;
+    min-width: 100px;
+    background: linear-gradient(180deg, #6ee7b7, #4ade80);
+    color: #0f172a;
+    border: none;
+    font-weight: 600;
+    
+    &:hover:not(:disabled) {
+      background: linear-gradient(180deg, #4ade80, #22c55e);
+      transform: translateY(-1px);
+    }
+    
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
     }
   }
   

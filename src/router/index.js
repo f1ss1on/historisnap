@@ -1,13 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@views/HomeView.vue'
 import HistoryExplorer from '@views/HistoryExplorer.vue'
-import TestingView from '@views/TestingView.vue'
+
+// Conditionally import TestingView only in development for build optimization
 
 const routes = [
   {
     path: '/',
     name: 'Home',
-    component: HomeView
+    component: HomeView,
+    // In production, redirect root to explorer
+    beforeEnter: (to, from, next) => {
+      if (!import.meta.env.DEV && to.path === '/') {
+        next('/explorer')
+      } else {
+        next()
+      }
+    }
   },
   {
     path: '/explorer',
@@ -19,11 +28,15 @@ const routes = [
     name: 'HistoryExplorerWithTitle',
     component: HistoryExplorer,
     props: true
-  },
-  {
+  }
+]
+
+// Only add testing route in development
+if (import.meta.env.DEV) {
+  routes.push({
     path: '/testing',
     name: 'Testing',
-    component: TestingView,
+    component: () => import('@views/TestingView.vue'),
     // Only available in development
     beforeEnter: (to, from, next) => {
       if (import.meta.env.DEV) {
@@ -32,8 +45,8 @@ const routes = [
         next('/')
       }
     }
-  }
-]
+  })
+}
 
 const router = createRouter({
   history: createWebHistory(),

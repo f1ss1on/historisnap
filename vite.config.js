@@ -5,6 +5,8 @@ import { resolve } from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  // Use relative paths for deployment flexibility
+  base: './',
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
@@ -35,7 +37,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['vue', 'vue-router', 'pinia'],
-          utils: ['src/utils/wikipedia-api.js', 'src/utils/multimedia-handler.js']
+          utils: ['src/utils/wikipedia-api.js']
         }
       }
     }
