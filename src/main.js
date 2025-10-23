@@ -1,3 +1,9 @@
+/**
+ * HistoriSnap - Snap into history
+ * Copyright (c) 2025 Riad Kilani (f1ss1on)
+ * Licensed under the MIT License
+ */
+
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import router from './router'

@@ -1,3 +1,8 @@
+<!--
+  HistoriSnap - Snap into history
+  Copyright (c) 2025 Riad Kilani (f1ss1on)
+  Licensed under the MIT License
+-->
 <template>
   <div id="app">
     <AppHeader />
