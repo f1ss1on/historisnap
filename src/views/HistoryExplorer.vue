@@ -261,12 +261,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick, shallowRef } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, shallowRef, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useHistoryStore } from '@stores/history.js'
 import wikipediaAPI from '@utils/wikipedia-api.js'
 import MediaModal from '@components/MediaModal.vue'
 
 const historyStore = useHistoryStore()
+const router = useRouter()
 const showMediaModal = ref(false)
 
 // Performance optimization: Use shallowRef for frequently changing data
@@ -600,24 +602,152 @@ const goToRandomDecade = async () => {
 }
 
 const goToHistoricalPeriod = async () => {
-  const historicalYears = [1969, 1945, 1963, 1989, 1929, 1903, 1914, 1918, 2001, 1991]
-  const randomYear = historicalYears[Math.floor(Math.random() * historicalYears.length)]
+  console.log('🔥 Major Events button clicked!')
   
-  // Update navigation to show the decade containing this year
-  const yearDecade = Math.floor(randomYear / 10) * 10
-  selectedDecade.value = yearDecade
-  const decadeIndex = allDecades.value.indexOf(yearDecade)
-  if (decadeIndex >= 0) {
-    currentDecadePage.value = Math.floor(decadeIndex / 3)
+  // Curated list of major historical events with specific dates
+  const majorEvents = [
+    { year: 2001, month: 9, day: 11, title: "September 11 Attacks" },
+    { year: 1989, month: 11, day: 9, title: "Fall of the Berlin Wall" },
+    { year: 1969, month: 7, day: 20, title: "Moon Landing" },
+    { year: 1963, month: 11, day: 22, title: "JFK Assassination" },
+    { year: 1945, month: 8, day: 6, title: "Hiroshima Atomic Bomb" },
+    { year: 1945, month: 5, day: 8, title: "VE Day - End of WWII in Europe" },
+    { year: 1941, month: 12, day: 7, title: "Pearl Harbor Attack" },
+    { year: 1937, month: 5, day: 6, title: "Hindenburg Disaster" },
+    { year: 1929, month: 10, day: 29, title: "Black Tuesday - Stock Market Crash" },
+    { year: 1918, month: 11, day: 11, title: "WWI Armistice" },
+    { year: 1914, month: 6, day: 28, title: "Assassination of Archduke Franz Ferdinand" },
+    { year: 1912, month: 4, day: 15, title: "Titanic Sinking" },
+    { year: 1906, month: 4, day: 18, title: "San Francisco Earthquake" },
+    { year: 1865, month: 4, day: 14, title: "Lincoln Assassination" },
+    { year: 1863, month: 11, day: 19, title: "Gettysburg Address" },
+    { year: 1776, month: 7, day: 4, title: "Declaration of Independence" },
+    { year: 1666, month: 9, day: 2, title: "Great Fire of London" },
+    { year: 1492, month: 10, day: 12, title: "Columbus Reaches the Americas" },
+    { year: 1347, month: 10, day: 1, title: "Black Death Arrives in Europe" },
+    { year: 79, month: 8, day: 24, title: "Mount Vesuvius Destroys Pompeii" }
+  ]
+  
+  const randomEvent = majorEvents[Math.floor(Math.random() * majorEvents.length)]
+  console.log('🎯 Selected major event:', randomEvent)
+  
+  try {
+    historyStore.setLoading(true)
+    
+    console.log('📡 Fetching event from Wikipedia API...')
+    // Try to get the specific historical event for this date
+    const event = await wikipediaAPI.fetchEventsFromSpecificDate(randomEvent.year, randomEvent.month, randomEvent.day)
+    console.log('📖 Wikipedia API response:', event)
+    
+    if (event) {
+      // Use the actual year from the event
+      const actualYear = event.year || randomEvent.year
+      console.log('✅ Got event data, setting year to:', actualYear)
+      
+      historyStore.setSelectedYear(actualYear)
+      historyStore.setEvent(actualYear, event)
+      
+      // Show the event to the user
+      currentEvent.value = event
+      updateUrlWithEventTitle(event)
+      console.log('🎉 Displaying event:', event.name || event.title)
+      
+      // Update decade navigation to show the decade containing this year
+      const yearDecade = Math.floor(actualYear / 10) * 10
+      selectedDecade.value = yearDecade
+      syncDecadePage()
+      
+      // Show media modal if available
+      if (event.media?.length > 0) {
+        await handleViewMedia(event)
+      }
+    } else {
+      console.log('❌ No Wikipedia data, creating custom event')
+      // Fallback: create a custom event entry for this major historical event
+      const customEvent = {
+        year: randomEvent.year,
+        name: randomEvent.title,
+        text: `On ${randomEvent.month}/${randomEvent.day}/${randomEvent.year} - ${randomEvent.title}. This is one of the most significant events in world history.`,
+        date: `${randomEvent.month}/${randomEvent.day}/${randomEvent.year}`,
+        source: 'Major Historical Events'
+      }
+      
+      historyStore.setSelectedYear(randomEvent.year)
+      historyStore.setEvent(randomEvent.year, customEvent)
+      
+      // Show the custom event to the user
+      currentEvent.value = customEvent
+      updateUrlWithEventTitle(customEvent)
+      console.log('🎉 Displaying custom event:', customEvent.name)
+      
+      // Update decade navigation
+      const yearDecade = Math.floor(randomEvent.year / 10) * 10
+      selectedDecade.value = yearDecade
+      syncDecadePage()
+    }
+    
+  } catch (error) {
+    console.error('💥 Error fetching major historical event:', error)
+    
+    // Fallback: create a custom event for the selected major event
+    const customEvent = {
+      year: randomEvent.year,
+      name: randomEvent.title,
+      text: `On ${randomEvent.month}/${randomEvent.day}/${randomEvent.year} - ${randomEvent.title}. This is one of the most significant events in world history.`,
+      date: `${randomEvent.month}/${randomEvent.day}/${randomEvent.year}`,
+      source: 'Major Historical Events'
+    }
+    
+    historyStore.setSelectedYear(randomEvent.year)
+    historyStore.setEvent(randomEvent.year, customEvent)
+    
+    // Show the custom event to the user
+    currentEvent.value = customEvent
+    updateUrlWithEventTitle(customEvent)
+    console.log('🔄 Fallback: Displaying custom event:', customEvent.name)
+    
+    // Update decade navigation
+    const yearDecade = Math.floor(randomEvent.year / 10) * 10
+    selectedDecade.value = yearDecade
+    syncDecadePage()
+  } finally {
+    historyStore.setLoading(false)
+    console.log('✅ Major Events function completed')
   }
-  
-  historyStore.setSelectedYear(randomYear)
-  await fetchEventForYear(randomYear)
 }
 
 const handleSearch = () => {
   // Implementation for search functionality
   console.log('Searching for:', searchQuery.value)
+}
+
+// URL Management Functions
+const createUrlSlug = (title) => {
+  if (!title) return ''
+  return title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '') // Remove special characters
+    .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
+    .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+    .substring(0, 100) // Limit length
+}
+
+const updateUrlWithEventTitle = (event) => {
+  if (!event || (!event.name && !event.title)) return
+  
+  const title = event.name || event.title
+  const slug = createUrlSlug(title)
+  
+  if (slug) {
+    const newPath = `/explorer/${slug}`
+    // Only update if the path is different to avoid unnecessary navigation
+    if (router.currentRoute.value.path !== newPath) {
+      router.replace({
+        name: 'HistoryExplorerWithTitle',
+        params: { title: slug }
+      })
+    }
+  }
 }
 
 const openMediaModal = () => {
@@ -815,7 +945,23 @@ const formatTimestamp = (timestamp) => {
   return new Date(timestamp).toLocaleString()
 }
 
+// Watch for currentEvent changes and update URL
+watch(currentEvent, (newEvent) => {
+  if (newEvent) {
+    updateUrlWithEventTitle(newEvent)
+  }
+}, { immediate: false })
+
 onMounted(async () => {
+  // Check if we have a title parameter in the route
+  const routeTitle = router.currentRoute.value.params.title
+  
+  if (routeTitle) {
+    // If we have a title in the URL, we might want to search for it or just show default content
+    // For now, just show the default "today in history" but keep the URL
+    console.log('📍 Loaded with URL title:', routeTitle)
+  }
+  
   // Get today's date
   const today = new Date()
   const currentMonth = today.getMonth() + 1 // getMonth() returns 0-11

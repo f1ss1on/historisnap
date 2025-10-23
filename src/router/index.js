@@ -15,6 +15,12 @@ const routes = [
     component: HistoryExplorer
   },
   {
+    path: '/explorer/:title',
+    name: 'HistoryExplorerWithTitle',
+    component: HistoryExplorer,
+    props: true
+  },
+  {
     path: '/testing',
     name: 'Testing',
     component: TestingView,
